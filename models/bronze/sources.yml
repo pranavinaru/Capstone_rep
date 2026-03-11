@@ -1,0 +1,15 @@
+version: 2
+ 
+sources:
+ 
+- name: bronze
+  database: capstone
+  schema: bronze
+  tables:
+  - name: ext_campaign_data
+  - name: ext_customer_data
+  - name: ext_product_data
+  - name: ext_orders_data
+  - name: ext_store_data
+  - name: ext_supplier_data
+  - name: ext_employee_data
