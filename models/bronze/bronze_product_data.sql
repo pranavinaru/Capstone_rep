@@ -13,16 +13,16 @@ p.value:size::STRING              AS size,
 p.value:dimensions::STRING        AS dimensions,
 p.value:technical_specs::STRING   AS technical_specs,
  
-p.value:cost_price::FLOAT         AS cost_price,
-p.value:unit_price::FLOAT         AS unit_price,
+p.value:cost_price::STRING        AS cost_price,
+p.value:unit_price::STRING        AS unit_price,
  
-p.value:stock_quantity::NUMBER    AS stock_quantity,
-p.value:reorder_level::NUMBER     AS reorder_level,
+p.value:stock_quantity::STRING   AS stock_quantity,
+p.value:reorder_level::STRING     AS reorder_level,
  
-p.value:is_featured::BOOLEAN      AS is_featured,
+p.value:is_featured::STRING     AS is_featured,
  
-TO_DATE(p.value:launch_date::STRING,'YYYY-MM-DD') AS launch_date,
-TO_DATE(p.value:last_modified_date::STRING,'YYYY-MM-DD') AS last_modified_date,
+p.value:launch_date::STRING AS launch_date,
+p.value:last_modified_date::STRING AS last_modified_date,
  
 p.value:warranty_period::STRING   AS warranty_period,
 p.value:weight::STRING            AS weight,
