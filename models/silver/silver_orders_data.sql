@@ -1,17 +1,33 @@
-WITH source_data AS (
+WITH order_items AS (
  
 SELECT *
-FROM {{ ref('bronze_orders_data') }}
+FROM {{ ref('silver_orders_items') }}
  
 ),
  
-/* ===============================
-DATA TYPE STANDARDIZATION
-================================ */
- 
-clean_orders AS (
+order_items_agg AS (
  
 SELECT
+ 
+order_id,
+ 
+COUNT(product_id) AS total_items,
+SUM(quantity) AS total_quantity,
+ 
+SUM(item_total_amount) AS calculated_total_amount,
+SUM(item_cost) AS total_cost,
+ 
+SUM(discount_amount) AS total_discount
+ 
+FROM order_items
+ 
+GROUP BY order_id
+ 
+),
+ 
+order_header AS (
+ 
+SELECT DISTINCT
  
 TRIM(order_id) AS order_id,
 TRIM(customer_id) AS customer_id,
@@ -25,88 +41,38 @@ INITCAP(TRIM(payment_method)) AS payment_method,
  
 TRY_TO_TIMESTAMP(order_date) AS order_date,
 TRY_TO_TIMESTAMP(created_at) AS created_at,
+ 
 TRY_TO_DATE(delivery_date) AS delivery_date,
 TRY_TO_DATE(estimated_delivery_date) AS estimated_delivery_date,
 TRY_TO_DATE(shipping_date) AS shipping_date,
  
-TRY_TO_NUMBER(quantity) AS quantity,
-TRY_TO_NUMBER(unit_price) AS unit_price,
-TRY_TO_NUMBER(cost_price) AS cost_price,
-TRY_TO_NUMBER(item_discount) AS discount_amount,
- 
 TRY_TO_NUMBER(tax_amount) AS tax_amount,
 TRY_TO_NUMBER(shipping_cost) AS shipping_cost,
 TRY_TO_NUMBER(order_discount) AS order_discount,
-TRY_TO_NUMBER(total_amount) AS total_amount,
+TRY_TO_NUMBER(total_amount) AS total_amount
  
-INITCAP(TRIM(billing_city)) AS billing_city,
-INITCAP(TRIM(billing_state)) AS billing_state,
-TRIM(billing_street) AS billing_street,
-TRIM(billing_zip_code) AS billing_zip_code,
- 
-INITCAP(TRIM(shipping_city)) AS shipping_city,
-INITCAP(TRIM(shipping_state)) AS shipping_state,
-TRIM(shipping_street) AS shipping_street,
-TRIM(shipping_zip_code) AS shipping_zip_code,
- 
-product_id
- 
-FROM source_data
+FROM {{ ref('bronze_orders_data') }}
  
 ),
  
-/* ===============================
-AGGREGATE ORDER ITEMS
-================================ */
- 
-order_items_agg AS (
+orders_joined AS (
  
 SELECT
  
-order_id,
- 
-COUNT(product_id) AS total_items,
- 
-SUM(quantity) AS total_quantity,
- 
-SUM(quantity * unit_price) AS calculated_total_amount,
- 
-SUM(quantity * cost_price) AS total_cost,
- 
-SUM(discount_amount) AS total_discount
- 
-FROM clean_orders
- 
-GROUP BY order_id
- 
-),
- 
-/* ===============================
-JOIN BACK ORDER DATA
-================================ */
- 
-orders_enriched AS (
- 
-SELECT
- 
-c.*,
+h.*,
 a.total_items,
 a.total_quantity,
 a.calculated_total_amount,
 a.total_cost,
 a.total_discount
  
-FROM clean_orders c
+FROM order_header h
 LEFT JOIN order_items_agg a
-ON c.order_id = a.order_id
+ON h.order_id = a.order_id
  
 ),
  
-/* ===============================
-PROFIT CALCULATION
-================================ */
- 
-orders_profit AS (
+profit_calc AS (
  
 SELECT
  
@@ -128,15 +94,11 @@ THEN
 - tax_amount) / total_amount
 END AS profit_margin_percentage
  
-FROM orders_enriched
+FROM orders_joined
  
 ),
  
-/* ===============================
-ORDER TIME OF DAY
-================================ */
- 
-orders_time AS (
+order_time AS (
  
 SELECT
  
@@ -149,15 +111,11 @@ WHEN DATE_PART(hour, order_date) BETWEEN 17 AND 21 THEN 'Evening'
 ELSE 'Night'
 END AS order_time_of_day
  
-FROM orders_profit
+FROM profit_calc
  
 ),
  
-/* ===============================
-DATE DIMENSIONS
-================================ */
- 
-orders_date_parts AS (
+date_parts AS (
  
 SELECT
  
@@ -168,22 +126,17 @@ DATE_PART(month, order_date) AS order_month,
 DATE_PART(quarter, order_date) AS order_quarter,
 DATE_PART(year, order_date) AS order_year
  
-FROM orders_time
+FROM order_time
  
 ),
  
-/* ===============================
-SHIPPING METRICS
-================================ */
- 
-orders_shipping AS (
+shipping_metrics AS (
  
 SELECT
  
 *,
  
 DATEDIFF(day, order_date, shipping_date) AS processing_days,
- 
 DATEDIFF(day, shipping_date, delivery_date) AS shipping_days,
  
 CASE
@@ -203,9 +156,9 @@ ELSE 'In Transit'
  
 END AS delivery_status
  
-FROM orders_date_parts
+FROM date_parts
  
 )
  
 SELECT *
-FROM orders_shipping
+FROM shipping_metrics
