@@ -3,7 +3,7 @@ WITH source_data AS (
     FROM {{ ref('snp_supplier_data') }}
     WHERE dbt_valid_to IS NULL
 ),
- 
+
 cleaned_birthdate AS (
     SELECT
         TRIM(supplier_id) AS supplier_id,
@@ -24,34 +24,31 @@ cleaned_birthdate AS (
         INITCAP(TRIM(address)) AS address,
         INITCAP(TRIM(contact_person)) AS contact_person,
         LOWER(TRIM(contact_email)) AS contact_email,
- 
+
         CASE
             WHEN LOWER(TRIM(contact_email))
                  RLIKE '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
             THEN LOWER(TRIM(contact_email))
             ELSE NULL
         END AS valid_contact_email,
- 
+
         REGEXP_REPLACE(contact_phone,'[^0-9]','') AS phone_number,
- 
+
         CASE
-            -- 11-digit number starting with 1 → strip leading 1
             WHEN LENGTH(REGEXP_REPLACE(contact_phone,'[^0-9]','')) = 11
                  AND LEFT(REGEXP_REPLACE(contact_phone,'[^0-9]',''),1) = '1'
             THEN SUBSTRING(REGEXP_REPLACE(contact_phone,'[^0-9]',''),2)
- 
-            -- 10-digit number starting with 1 → invalid
+
             WHEN LENGTH(REGEXP_REPLACE(contact_phone,'[^0-9]','')) = 10
                  AND LEFT(REGEXP_REPLACE(contact_phone,'[^0-9]',''),1) = '1'
             THEN NULL
- 
-            -- 10-digit number → keep as-is
+
             WHEN LENGTH(REGEXP_REPLACE(contact_phone,'[^0-9]','')) = 10
             THEN REGEXP_REPLACE(contact_phone,'[^0-9]','')
- 
+
             ELSE NULL
         END AS valid_phone,
- 
+
         TRIM(contract_id) AS contract_id,
         TRY_TO_DATE(contract_start_date) AS contract_start_date,
         TRY_TO_DATE(contract_end_date) AS contract_end_date,
@@ -63,18 +60,18 @@ cleaned_birthdate AS (
         INITCAP(TRIM(quality_rating)) AS quality_rating,
         TRY_TO_NUMBER(response_time_hours) AS response_time_hours,
         TRY_TO_NUMBER(returns_percentage) AS returns_percentage,
- 
+
         dbt_scd_id,
         dbt_updated_at,
         dbt_valid_from,
         dbt_valid_to
     FROM source_data
 ),
- 
+
 final_cleaned AS (
     SELECT *
     FROM cleaned_birthdate
 )
- 
+
 SELECT *
 FROM final_cleaned

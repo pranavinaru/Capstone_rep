@@ -13,4 +13,4 @@ SELECT
     f.value:total_cost::STRING         AS total_cost,
     f.value:total_revenue::STRING      AS total_revenue
 FROM {{ source('bronze','ext_campaign_data') }},
-LATERAL FLATTEN(input => VALUE:campaigns_data) f
+    LATERAL FLATTEN(input => VALUE:campaigns_data) f

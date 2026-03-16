@@ -1,5 +1,5 @@
 SELECT
-    ROW_NUMBER() OVER (ORDER BY supplier_id, dbt_valid_from) AS SupplierKey,
+    {{ dbt_utils.generate_surrogate_key(['supplier_id','dbt_valid_from']) }} AS SupplierKey,
     supplier_id AS SupplierID,
     supplier_name AS SupplierName,
     valid_contact_email AS Contact_Email,
@@ -7,3 +7,4 @@ SELECT
     payment_terms AS Payment_Terms,
     supplier_type AS Supplier_Type
 FROM {{ ref('silver_supplier_data') }}
+

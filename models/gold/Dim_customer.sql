@@ -1,5 +1,5 @@
 SELECT
-    ROW_NUMBER() OVER (ORDER BY customer_id, dbt_valid_from) AS customerkey,
+    {{ dbt_utils.generate_surrogate_key(['customer_id','dbt_valid_from']) }} AS customerkey,
     customer_id,
     first_name || ' ' || last_name AS full_name,
     valid_email AS email,

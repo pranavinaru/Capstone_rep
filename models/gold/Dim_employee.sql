@@ -1,5 +1,5 @@
 SELECT
-    ROW_NUMBER() OVER (ORDER BY employee_id, dbt_valid_from) AS EmployeeKey,
+    {{ dbt_utils.generate_surrogate_key(['employee_id','dbt_valid_from']) }} AS EmployeeKey,
     employee_id AS EmployeeID,
     first_name || ' ' || last_name AS Full_Name,
     standardized_role AS Role,
@@ -10,5 +10,6 @@ SELECT
     sales_target AS Sales_Target,
     orders_processed AS Orders_Processed,
     total_sales_amount AS Total_Sales,
+    hire_date AS hire_date,
     target_achievement_percentage AS Taget_Achievement_Percentage
 FROM {{ ref('silver_employee_data') }}

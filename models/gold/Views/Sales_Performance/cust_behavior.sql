@@ -1,0 +1,11 @@
+{{ config(materialized='view') }}
+ 
+SELECT c.customer_segment,
+       COUNT(DISTINCT f.order_id) AS total_orders,
+       SUM(f.total_sales_amount) AS total_spent,
+       AVG(f.total_sales_amount) AS avg_order_value
+FROM {{ ref('Fact_sales') }} f
+JOIN {{ ref('Dim_customer') }} c
+ON f.customerkey = c.customerkey
+GROUP BY c.customer_segment
+ORDER BY total_spent DESC
