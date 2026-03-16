@@ -5,7 +5,7 @@ WITH dates AS (
 )
 
 SELECT
-    TO_NUMBER(TO_CHAR(full_date, 'YYYYMMDD')) AS datekey,
+    {{ dbt_utils.generate_surrogate_key(['full_date']) }} AS datekey,
     full_date,
     YEAR(full_date) AS year,
     QUARTER(full_date) AS quarter,

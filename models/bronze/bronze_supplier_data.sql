@@ -1,46 +1,33 @@
 SELECT
-    s.value:supplier_id::STRING               AS supplier_id,
-    s.value:supplier_name::STRING             AS supplier_name,
-    s.value:supplier_type::STRING             AS supplier_type,
-    s.value:tax_id::STRING                     AS tax_id,
-    s.value:website::STRING                    AS website,
-    s.value:year_established::STRING          AS year_established,
-
-    s.value:credit_rating::STRING              AS credit_rating,
-    s.value:is_active::STRING                  AS is_active,
-
-    s.value:last_modified_date::STRING        AS last_modified_date,
-    s.value:last_order_date::STRING           AS last_order_date,
-
-    s.value:lead_time_days::STRING            AS lead_time_days,
-    s.value:minimum_order_quantity::STRING    AS minimum_order_quantity,
-
-    s.value:payment_terms::STRING             AS payment_terms,
-    s.value:preferred_carrier::STRING         AS preferred_carrier,
-
-    -- categories array
+    s.value:supplier_id::STRING                    AS supplier_id,
+    s.value:supplier_name::STRING                  AS supplier_name,
+    s.value:supplier_type::STRING                  AS supplier_type,
+    s.value:tax_id::STRING                         AS tax_id,
+    s.value:website::STRING                        AS website,
+    s.value:year_established::STRING               AS year_established,
+    s.value:credit_rating::STRING                  AS credit_rating,
+    s.value:is_active::STRING                      AS is_active,
+    s.value:last_modified_date::STRING             AS last_modified_date,
+    s.value:last_order_date::STRING                AS last_order_date,
+    s.value:lead_time_days::STRING                 AS lead_time_days,
+    s.value:minimum_order_quantity::STRING         AS minimum_order_quantity,
+    s.value:payment_terms::STRING                  AS payment_terms,
+    s.value:preferred_carrier::STRING              AS preferred_carrier,
     ARRAY_TO_STRING(s.value:categories_supplied, ', ') AS categories_supplied,
-
-    -- contact information
     s.value:contact_information.address::STRING        AS address,
     s.value:contact_information.contact_person::STRING AS contact_person,
     s.value:contact_information.email::STRING          AS contact_email,
     s.value:contact_information.phone::STRING          AS contact_phone,
-
-    -- contract details
     s.value:contract_details.contract_id::STRING       AS contract_id,
     s.value:contract_details.start_date::STRING        AS contract_start_date,
     s.value:contract_details.end_date::STRING          AS contract_end_date,
     s.value:contract_details.exclusivity::STRING       AS exclusivity,
     s.value:contract_details.renewal_option::STRING    AS renewal_option,
-
-    -- performance metrics
     s.value:performance_metrics.average_delay_days::STRING    AS average_delay_days,
     s.value:performance_metrics.defect_rate::STRING           AS defect_rate,
     s.value:performance_metrics.on_time_delivery_rate::STRING AS on_time_delivery_rate,
     s.value:performance_metrics.quality_rating::STRING        AS quality_rating,
     s.value:performance_metrics.response_time_hours::STRING   AS response_time_hours,
     s.value:performance_metrics.returns_percentage::STRING    AS returns_percentage
-
-FROM {{ source('bronze','ext_supplier_data') }} AS src,
-LATERAL FLATTEN(input => src.value:suppliers_data) s
+FROM {{ source('bronze', 'ext_supplier_data') }} AS src,
+     LATERAL FLATTEN(input => src.value:suppliers_data) s
